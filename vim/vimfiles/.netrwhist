@@ -1,0 +1,8 @@
+let g:netrw_dirhistmax  =10
+let g:netrw_dirhist_cnt =6
+let g:netrw_dirhist_1='C:/Users/jpharris/OneDrive - University of the Sunshine Coast/Jesse/dev/zigford'
+let g:netrw_dirhist_2='C:/Users/jpharris/OneDrive - University of the Sunshine Coast/Jesse/dev/zigford/USC-SCCM'
+let g:netrw_dirhist_3='C:\Users\jpharris\vimfiles\plugged\ale\ale_linters\powershell'
+let g:netrw_dirhist_4='C:/Users/jpharris/vimfiles/plugged/ale/ale_linters'
+let g:netrw_dirhist_5='C:/Users/jpharris/vimfiles/plugged/ale'
+let g:netrw_dirhist_6='C:/Users/jpharris/vimfiles/plugged/ale/autoload'

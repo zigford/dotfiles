@@ -1,3 +1,4 @@
+$Env:PSModulePath = "${Env:PSModulePath}:/home/harrisj/src/usceduau/SaSTeam-General/Menu/Modules"
 function New-SymbolicLink {
 	Param($Target,$Link, [switch]$s)
 
@@ -286,3 +287,78 @@ Set-Alias iaa Invoke-AsAdmin -force
 
 function reboot {shutdown /r /t 0}
 #Update-Environment
+
+function Connect-Exchange {
+    Param(
+            [ValidateSet('Student','Staff')]$Tenant = 'Staff'
+         )
+
+    If ($Tenant -eq 'Staff') {
+        $UserName = 'adminjpharris@usc.edu.au'
+    } else {
+        $UserName = 'adminjpharris@student.usc.edu.au'
+    }
+
+    $Cred = New-Object System.Management.Automation.PSCredential `
+        -ArgumentList $UserName,
+        $(Get-Password -Account $UserName -AsSecureString)
+    $SessionSettings = @{
+        ConfigurationName = 'Microsoft.Exchange'
+        ConnectionUri = 'https://outlook.office365.com/powershell-liveid/'
+        Credential = $Cred
+        Authentication = 'Basic'
+        AllowRedirection = $True
+    }
+    $Global:ExchangeSession = New-PSSession @SessionSettings
+    Import-PSSession $Global:ExchangeSession -DisableNameChecking
+}
+
+function Disconnect-Exchange {
+    $Global:ExchangeSession | Remove-PSSession 
+}
+
+Set-Alias ce Connect-Exchange -force
+Set-Alias de Disconnect-Exchange -force
+
+function Connect-USCESX {
+    $Cred = New-Object System.Management.Automation.PSCredential `
+        -ArgumentList "adminjpharris@usc.edu.au",
+        $(Get-Password -Account adminjpharris -AsSecureString)
+        # $Cred = Get-Credential -Message "Enter admin account" `
+        #     -UserName 'adminjpharris@usc.edu.au'
+    $VIServer = @{
+        Server = 'wsp-vcenter01.usc.internal','wsp-vcenter02.usc.internal'
+        Credential = $Cred
+    }
+    Connect-VIServer @VIServer
+}
+
+function Disconnect-USCESX {
+    Disconnect-VIServer $global:DefaultVIServers -Confirm:$False
+}
+
+function Get-Password {
+    Param($Account,[switch]$AsSecureString)
+
+    op get account 2>&1|Out-Null
+    if ($False -eq $?) {
+        $Session = op signin
+        New-Item -ItemType File -Path Env:\ -Name OP_SESSION_my `
+            -Value $Session[0].Split('=')[1].Trim('"') `
+            -Force | Out-Null
+    }
+    $PwObject = op get item $Account | ConvertFrom-Json
+    $PW = $PwObject.details.sections.fields | Where-Object { $_.n -eq 'password' } |
+    Select-Object -ExpandProperty v
+    if ($AsSecureString) {
+        $PW | ConvertTo-SecureString -AsPlainText -Force
+    } else {
+        $PW
+    }
+
+}
+
+Set-Alias cv Connect-USCESX
+Set-Alias dv Disconnect-USCESX
+
+Import-Module '/home/harrisj/.local/share/powershell/Modules/posh-git/0.7.3\posh-git.psd1'

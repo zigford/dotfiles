@@ -286,6 +286,24 @@ function Import-Text {
 Set-Alias iaa Invoke-AsAdmin -force
 
 function reboot {shutdown /r /t 0}
+
+function Get-Colorscheme {
+    Param($Name)
+    Switch ($Name) {
+        White {
+            @{
+                Command = "`e[90m"
+                Default = "`e[30m"
+            }
+        }
+        Black {}
+    }
+}
+
+$Scheme = 'White'
+
+Set-PSReadLineOption -Colors (Get-Colorscheme $Scheme)
+
 #Update-Environment
 
 function Connect-Exchange {

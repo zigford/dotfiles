@@ -357,24 +357,13 @@ function Connect-Exchange {
             [ValidateSet('Student','Staff')]$Tenant = 'Staff'
          )
 
-    If ($Tenant -eq 'Staff') {
-        $UserName = 'adminjpharris@usc.edu.au'
-    } else {
-        $UserName = 'adminjpharris@student.usc.edu.au'
+    if (-Not (Get-Module -List ExchangeOnlineManagement)) {
+        Install-Module ExchangeOnlineManagement
     }
 
-    $Cred = New-Object System.Management.Automation.PSCredential `
-        -ArgumentList $UserName,
-        $(Get-Password -Account $UserName -AsSecureString)
-    $SessionSettings = @{
-        ConfigurationName = 'Microsoft.Exchange'
-        ConnectionUri = 'https://outlook.office365.com/powershell-liveid/'
-        Credential = $Cred
-        Authentication = 'Basic'
-        AllowRedirection = $True
-    }
-    $Global:ExchangeSession = New-PSSession @SessionSettings
-    Import-PSSession $Global:ExchangeSession -DisableNameChecking
+    $UserName = 'jpharris1i@usc.edu.au'
+
+    Connect-SaSO365 -UPN $UserName
 }
 
 function Disconnect-Exchange {
@@ -386,12 +375,10 @@ Set-Alias de Disconnect-Exchange -force
 
 function Connect-USCESX {
     $Cred = New-Object System.Management.Automation.PSCredential `
-        -ArgumentList "adminjpharris@usc.edu.au",
-        $(Get-Password -Account adminjpharris -AsSecureString)
-        # $Cred = Get-Credential -Message "Enter admin account" `
-        #     -UserName 'adminjpharris@usc.edu.au'
+        -ArgumentList "jpharris1i@usc.edu.au",
+        $(Get-Password -Account jpharris1i -AsSecureString)
     $VIServer = @{
-        Server = 'wsp-vcenter01.usc.internal','wsp-vcenter02.usc.internal'
+        Server = 'wsp-vcenter01.usc.internal'
         Credential = $Cred
     }
     Connect-VIServer @VIServer

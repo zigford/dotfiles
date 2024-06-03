@@ -110,7 +110,48 @@ function Test-VTSupport {
 
 }
 
+function Get-Colorscheme {
+    Param($Name)
+    Switch ($Name) {
+        White {
+            @{
+                Command = "`e[90m"
+                Default = "`e[30m"
+                Number = "`e[30;47m"
+            }
+        }
+        Black {
+            @{
+                Command = "`e[93m"
+                Default = "`e[39m"
+                InlinePrediction = "`e[37m"
+                Number = "`e[97m"
+            }
+        }
+    }
+}
+
+function Update-ColorScheme {
+    [CmdLetBinding(SupportsShouldProcess)]
+    Param()
+    If ($IsLinux) {
+        $Mode = gsettings get org.gnome.desktop.interface color-scheme
+        If ($Mode -match 'default') {
+            $Scheme = 'White'
+        } else {
+            $Scheme = 'Black'
+        }
+    } else {
+        $Scheme = 'Black'
+    }
+
+    If ($PSCmdlet.ShouldProcess($Scheme, 'Set color scheme to')) {
+        Set-PSReadLineOption -Colors (Get-Colorscheme $Scheme)
+    }
+}
+
 function prompt {
+    Update-ColorScheme
     If ($PSEdition -eq "Core") {
         $BC = "`e[96m" #Bright Cyan
         $C = "`e[36m" #Cyan
@@ -306,23 +347,8 @@ function Import-Text {
 Set-Alias iaa Invoke-AsAdmin -force
 
 function reboot {shutdown /r /t 0}
-
-function Get-Colorscheme {
-    Param($Name)
-    Switch ($Name) {
-        White {
-            @{
-                Command = "`e[90m"
-                Default = "`e[30m"
-            }
-        }
-        Black {}
-    }
-}
-
-$Scheme = 'White'
-
-Set-PSReadLineOption -Colors (Get-Colorscheme $Scheme)
+Update-ColorScheme
+Set-PSReadLineOption -EditMode vi
 
 #Update-Environment
 

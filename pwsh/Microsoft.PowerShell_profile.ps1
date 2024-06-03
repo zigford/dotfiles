@@ -1,4 +1,13 @@
 $Env:PSModulePath = "${Env:PSModulePath}:/home/harrisj/src/usceduau/SaSTeam-General/Menu/Modules"
+
+# Import local vars
+$LocalVarsFile = Join-Path -Path (
+        Split-Path -Path $profile -Parent
+    ) -ChildPath localvars.ps1
+If (Test-Path $LocalVarsFile) {
+    . $LocalVarsFile
+}
+
 function New-SymbolicLink {
 	Param($Target,$Link, [switch]$s)
 

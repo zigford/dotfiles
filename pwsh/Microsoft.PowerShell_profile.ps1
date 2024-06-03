@@ -391,16 +391,16 @@ function Disconnect-USCESX {
 function Get-Password {
     Param($Account,[switch]$AsSecureString)
 
-    op get account 2>&1|Out-Null
+    op account get 2>&1|Out-Null
     if ($False -eq $?) {
         $Session = op signin
         New-Item -ItemType File -Path Env:\ -Name OP_SESSION_my `
             -Value $Session[0].Split('=')[1].Trim('"') `
             -Force | Out-Null
     }
-    $PwObject = op get item $Account | ConvertFrom-Json
-    $PW = $PwObject.details.sections.fields | Where-Object { $_.n -eq 'password' } |
-    Select-Object -ExpandProperty v
+    $PwObject = op item get $Account --format json | ConvertFrom-Json
+    $PW = $PwObject.fields | Where-Object { $_.label -eq 'password' } |
+    Select-Object -ExpandProperty value
     if ($AsSecureString) {
         $PW | ConvertTo-SecureString -AsPlainText -Force
     } else {

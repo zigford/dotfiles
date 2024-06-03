@@ -55,6 +55,17 @@ Function Reset-Module {
 
 Set-Alias rsm -Value Reset-Module
 
+function open{
+    Param($Item)
+    If ($IsLinux) {
+        gio open $Item
+    } elseif ($IsMacOS) {
+        open $Item
+    } else {
+        start $Item
+    }
+}
+
 function ConvertTo-ShortPath {
     Param(
         [string]$Path

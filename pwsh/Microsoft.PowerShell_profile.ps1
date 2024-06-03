@@ -416,3 +416,5 @@ Set-Alias cv Connect-USCESX
 Set-Alias dv Disconnect-USCESX
 
 Import-Module '/home/harrisj/.local/share/powershell/Modules/posh-git/0.7.3\posh-git.psd1'
+function gs{git status}
+

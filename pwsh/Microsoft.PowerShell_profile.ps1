@@ -418,3 +418,12 @@ Set-Alias dv Disconnect-USCESX
 Import-Module '/home/harrisj/.local/share/powershell/Modules/posh-git/0.7.3\posh-git.psd1'
 function gs{git status}
 
+function WinShell {
+    Param([Switch]$Admin)
+    If ($Admin) {
+        $HostName = 'vmpass_admin'
+    } else {
+        $HostName = 'vmpass'
+    }
+    $Global:WinShell = New-PSSession -HostName $HostName
+}

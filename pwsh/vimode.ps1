@@ -1,3 +1,5 @@
+Set-PSReadLineOption -EditMode vi
+
 # Set-PSReadLineKeyHandler -vimode insert -Chord "k" -ScriptBlock { mapTwoLetterNormal 'k' 'j' }
 # Set-PSReadLineKeyHandler -vimode insert -Chord "j" -ScriptBlock { mapTwoLetterNormal 'j' 'k' }
 # function mapTwoLetterNormal($a, $b){

@@ -351,7 +351,6 @@ Set-Alias iaa Invoke-AsAdmin -force
 
 function reboot {shutdown /r /t 0}
 Update-ColorScheme
-Set-PSReadLineOption -EditMode vi
 
 #Update-Environment
 

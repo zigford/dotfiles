@@ -4,6 +4,10 @@ $Env:PSModulePath = "${Env:PSModulePath}:/home/harrisj/src/usceduau/SaSTeam-Gene
 $ProfilePath = (Split-Path -Path $profile -parent)
 $ViModePath = Join-Path -Path $ProfilePath -ChildPath vimode.ps1
 $LocalVarsFile = Join-Path -Path $ProfilePath -ChildPath localvars.ps1
+$LocalProfile = Join-Path -Path $ProfilePath -ChildPath Microsoft.PowerShell_profile_local.ps1
+If (Test-Path $LocalProfile) {
+    . $LocalProfile
+}
 If (Test-Path $LocalVarsFile) {
     . $LocalVarsFile
 }
@@ -153,6 +157,7 @@ function Update-ColorScheme {
     }
 }
 
+$GitPromptSettings = New-GitPromptSettings
 function prompt {
     Update-ColorScheme
     If ($PSEdition -eq "Core") {
@@ -175,10 +180,48 @@ function prompt {
         $priv = $nonroot
     }
 
+    $origDollarQuestion = $global:?
+    $origLastExitCode = $global:LASTEXITCODE
+
+    if (!$global:GitPromptValues) {
+        $global:GitPromptValues = [PoshGitPromptValues]::new()
+    }
+
+    $global:GitPromptValues.DollarQuestion = $origDollarQuestion
+    $global:GitPromptValues.LastExitCode = $origLastExitCode
+    $global:GitPromptValues.IsAdmin = $IsAdmin
+
+    $settings = $global:GitPromptSettings
+
+    if (!$settings) {
+        return "<`$GitPromptSettings not found> "
+    }
+
+    if ($settings.DefaultPromptEnableTiming) {
+        $sw = [System.Diagnostics.Stopwatch]::StartNew()
+    }
+
+    if ($settings.SetEnvColumns) {
+        # Set COLUMNS so git knows how wide the terminal is
+        $Env:COLUMNS = $Host.UI.RawUI.WindowSize.Width
+    }
+
+
+    # Write default prompt before suffix text
+
+    # If stopped in the debugger, the prompt needs to indicate that by writing default prompt debug
+    # if ((Test-Path Variable:/PSDebugContext) -or [runspace]::DefaultRunspace.Debugger.InBreakpoint) {
+        # $prompt += Write-Prompt $settings.DefaultPromptDebug.Expand()
+    # }
+
+    $git = Write-VcsStatus
+    # This has to be *after* the call to Write-VcsStatus, which populates $global:GitStatus
+    # Set-WindowTitle $global:GitStatus $IsAdmin
+
     if ($PSEdition -eq "Core"){
         # PSCore doesn't like a prompt using Write-Host
         #   thankfully, using VT100 signals works fine
-        "${BC}${priv} $G$H $C{ $BC$(ConvertTo-ShortPath ((pwd).Path)) $C}$N "
+        "${BC}${priv} $G$H $C{ $BC$(ConvertTo-ShortPath ((pwd).Path))$git $C}$N "
     } else {
         Write-Host "$priv " -NoNewline -ForegroundColor $BC
         Write-Host $H -NoNewline -ForegroundColor $G
@@ -187,6 +230,7 @@ function prompt {
         Write-Host ' }' -NoNewline -ForegroundColor $C
         return ' '
     }
+    $global:LASTEXITCODE = $origLastExitCode
 }
 
 function Get-Path {
@@ -414,7 +458,7 @@ function Get-Password {
 Set-Alias cv Connect-USCESX
 Set-Alias dv Disconnect-USCESX
 
-Import-Module '/home/harrisj/.local/share/powershell/Modules/posh-git/0.7.3\posh-git.psd1'
+Import-Module posh-git
 function gs{git status}
 
 function WinShell {
@@ -426,3 +470,4 @@ function WinShell {
     }
     $Global:WinShell = New-PSSession -HostName $HostName
 }
+

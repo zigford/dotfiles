@@ -346,20 +346,6 @@ function Invoke-AsAdmin {
     }
 }
 
-function Connect-Win {
-    [CmdLetBinding()]
-    Param($ComputerName='appdev4',$UserName='adminjpharris')
-    $s = New-PSSession -HostName appdev -UserName $UserName
-    Invoke-Command -Session $s -ScriptBlock {
-        function prompt {'> '}
-        Import-Module WindowsCompatibility
-        Import-WinModule Microsoft.PowerShell.Management
-        Set-ExecutionPolicy Bypass -Scope CurrentUser -Force
-        . \\usc.internal\usc\appdev\SCCMPackages\OperatingSystems\USC-WIMMgmt.ps1
-    }
-    Enter-Pssession -Session $s
-}
-
 If ($IsWindows) {
     Set-Alias hv virtmgmt.msc -force
     Set-Alias ln New-SymbolicLink -force
@@ -397,19 +383,9 @@ function reboot {shutdown /r /t 0}
 Update-ColorScheme
 
 #Update-Environment
-
-function Connect-Exchange {
-    Param(
-            [ValidateSet('Student','Staff')]$Tenant = 'Staff'
-         )
-
-    if (-Not (Get-Module -List ExchangeOnlineManagement)) {
-        Install-Module ExchangeOnlineManagement
-    }
-
-    $UserName = 'jpharris1i@usc.edu.au'
-
-    Connect-SaSO365 -UPN $UserName
+$ChocolateyProfile = "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
+if (Test-Path($ChocolateyProfile)) {
+  Import-Module "$ChocolateyProfile"
 }
 
 function Disconnect-Exchange {
@@ -419,20 +395,46 @@ function Disconnect-Exchange {
 Set-Alias ce Connect-Exchange -force
 Set-Alias de Disconnect-Exchange -force
 
-function Connect-USCESX {
-    $Cred = New-Object System.Management.Automation.PSCredential `
-        -ArgumentList "jpharris1i@usc.edu.au",
-        $(Get-Password -Account jpharris1i -AsSecureString)
-    $VIServer = @{
-        Server = 'wsp-vcenter01.usc.internal'
-        Credential = $Cred
-    }
-    Connect-VIServer @VIServer
+function git{
+    wsl git $args
+}
+
+function gs{
+    wsl git status $args
+}
+
+$pwsh_modules = "$HOME\pwsh-modules"
+if ($ENV:PSModulePath -notlike "*$pwsh_modules*") {
+    $ENV:PSModulePath = "$ENV:PSModulePath;$pwsh_modules"
 }
 
 function Disconnect-USCESX {
     Disconnect-VIServer $global:DefaultVIServers -Confirm:$False
 }
+
+Set-Alias cv Connect-USCESX
+Set-Alias dv Disconnect-USCESX
+
+function wslpath {
+    Param($Path)
+    # Convert Windows paths to WSL paths
+    $Path = $Path.Replace('\','\\')
+    If ($IsWindows) {
+        wsl wslpath -u $Path
+    }
+    Connect-VIServer @VIServer
+}
+
+function gvim{
+    Param(
+            $Path
+         )
+    wsl gvim $(wslpath $Path)
+}
+
+Import-Module posh-git
+
+function gs{git status}
 
 function Get-Password {
     Param($Account,[switch]$AsSecureString)
@@ -452,14 +454,47 @@ function Get-Password {
     } else {
         $PW
     }
-
 }
 
-Set-Alias cv Connect-USCESX
-Set-Alias dv Disconnect-USCESX
+function so{
+    Request-AzurePimRole `
+        -RoleName 'Security Operator' `
+        -Reason "Resolving security tickets"
+}
 
-Import-Module posh-git
-function gs{git status}
+function sa{
+    Request-AzurePimRole `
+        -RoleName 'Security Administrator' `
+        -Reason "Resolving security tickets"
+}
+
+function ea{
+    Request-AzurePimRole `
+        -RoleName 'Exchange Administrator' `
+        -Reason "Shared mailbox management"
+}
+
+function aa{
+    Request-AzurePimRole `
+        -RoleName 'Application Administrator' `
+        -Reason $(Read-Host -Prompt "Reason")
+}
+
+function pra{
+    Request-AzurePimRole `
+        -RoleName 'Privileged Role Administrator' `
+        -Reason "Managing roles and admin units"
+}
+
+function start-day {
+    $Roles = select-list -StartingObjects $null -AllObjects (Get-AzurePimRole -ListAvailable | select -expand displayname)
+    $Hours = Read-host -Prompt "How many hours will you be working today?"
+    $Reason = Read-host -Prompt "What is the reason for these role activations?"
+    Request-AzurePimRole `
+        -RoleName $Roles `
+        -DurationHours $Hours `
+        -Reason $Reason
+}
 
 function WinShell {
     Param([Switch]$Admin)
@@ -470,4 +505,3 @@ function WinShell {
     }
     $Global:WinShell = New-PSSession -HostName $HostName
 }
-

@@ -414,17 +414,39 @@ function Disconnect-Exchange {
 Set-Alias ce Connect-Exchange -force
 Set-Alias de Disconnect-Exchange -force
 
-function git{
-    wsl git $args
-}
+If ($IsLinux) {
+    # Linux stuff
+} elseif ($IsWindows) {
+    function git{
+        wsl git $args
+    }
 
-function gs{
-    wsl git status $args
-}
+    function gs{
+        wsl git status $args
+    }
 
-$pwsh_modules = "$HOME\pwsh-modules"
-if ($ENV:PSModulePath -notlike "*$pwsh_modules*") {
-    $ENV:PSModulePath = "$ENV:PSModulePath;$pwsh_modules"
+    $pwsh_modules = "$HOME\pwsh-modules"
+    if ($ENV:PSModulePath -notlike "*$pwsh_modules*") {
+        $ENV:PSModulePath = "$ENV:PSModulePath;$pwsh_modules"
+    }
+
+    function wslpath {
+        Param($Path)
+        # Convert Windows paths to WSL paths
+        $Path = $Path.Replace('\','\\')
+        If ($IsWindows) {
+            wsl wslpath -u $Path
+        }
+    }
+
+    function gvim{
+        Param(
+                $Path
+            )
+        wsl gvim $(wslpath $Path)
+    }
+
+
 }
 
 function Disconnect-USCESX {
@@ -433,23 +455,6 @@ function Disconnect-USCESX {
 
 Set-Alias cv Connect-USCESX
 Set-Alias dv Disconnect-USCESX
-
-function wslpath {
-    Param($Path)
-    # Convert Windows paths to WSL paths
-    $Path = $Path.Replace('\','\\')
-    If ($IsWindows) {
-        wsl wslpath -u $Path
-    }
-    Connect-VIServer @VIServer
-}
-
-function gvim{
-    Param(
-            $Path
-         )
-    wsl gvim $(wslpath $Path)
-}
 
 Import-Module posh-git
 

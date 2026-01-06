@@ -1,5 +1,7 @@
 $Env:PSModulePath = "${Env:PSModulePath}:/home/harrisj/src/usceduau/SaSTeam-General/Menu/Modules"
 
+Set-PSReadlineOption -PredictionSource HistoryAndPlugin
+
 # Import local vars
 $ProfilePath = (Split-Path -Path $profile -parent)
 $ViModePath = Join-Path -Path $ProfilePath -ChildPath vimode.ps1

@@ -127,11 +127,12 @@ function Get-Colorscheme {
                 Command = "`e[90m"
                 Default = "`e[30m"
                 Number = "`e[30;47m"
+                String = "`e[38;5;33m"
             }
         }
         Black {
             @{
-                Command = "`e[93m"
+                Command = "`e[33m"
                 Default = "`e[39m"
                 InlinePrediction = "`e[37m"
                 Number = "`e[97m"

@@ -639,3 +639,37 @@ function WinShell {
     }
     $Global:WinShell = New-PSSession -HostName $HostName
 }
+
+function Start-Day {
+    Param(
+            $Reason="Standard azure roles required for my role. BAU",
+            $Hours=8
+         )
+    $CurrentRoles = Get-AzurePimRole
+    $AllRoles = Get-AzurePimRole -ListAvailable
+    $AvailableRoles = @()
+    $AlreadyActiveRoles = @()
+    ForEach ($AllRole in $AllRoles) {
+        $RoleAvailable = $True
+        ForEach ($CurrentRole in $CurrentRoles) {
+            If ($AllRole.DisplayName -eq $CurrentRole.DisplayName -and
+                    $AllRole.Scope -eq $CurrentRole.Scope) {
+                $RoleAvailable = $False
+            }
+        }
+        If ($RoleAvailable) {
+            $AvailableRoles+=$AllRole
+        } else {
+            $AlreadyActiveRoles+=$AllRole.DisplayName
+        }
+    }
+
+    Write-Output "You already have these roles: `n"
+    $AlreadyActiveRoles
+
+    Request-AzurePimRole -RoleName (
+        Select-List -AllObjects ($AvailableRoles.DisplayName | Sort-Object) `
+            -Prompt "Select roles to activate"
+    ) -Reason $Reason -DurationHours $Hours
+}
+
